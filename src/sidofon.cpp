@@ -311,7 +311,7 @@ struct Sidofon : Module {
 #endif
 
         // map sample mode
-        reSID::sampling_method samplingMethod;
+        reSID::sampling_method samplingMethod{};
         switch(sampleMode) {
             case SAMPLE_DIRECT:
             case SAMPLE_RESAMPLE:
