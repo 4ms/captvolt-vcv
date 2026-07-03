@@ -842,7 +842,9 @@ struct SidofonWidget : ModuleWidget {
     void appendContextMenu(Menu *menu) override {
         Sidofon *module = dynamic_cast<Sidofon*>(this->module);
 
+#ifndef METAMODULE
         menu->addChild(new MenuEntry);
+#endif
 
         ResetMenuItem *resetItem = new ResetMenuItem();
         resetItem->text = "Reset SID Chip";
