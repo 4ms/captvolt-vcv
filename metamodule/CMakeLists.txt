@@ -44,10 +44,31 @@ target_include_directories(CaptVolt PRIVATE
 	${SOURCE_DIR}/resid
 )
 
-target_compile_options(CaptVolt 
-	PRIVATE 
+target_compile_options(CaptVolt
+	PRIVATE
 	$<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-enum-float-conversion>
 )
+
+# reSID relies on defined (wrapping) signed-integer overflow and does pointer
+# type-punning. If problems arise, when running on hardware we can try enabling these flags.
+# set(RESID_SAFE_FLAGS
+# 	-fno-strict-aliasing
+# 	-fwrapv
+# 	-fno-tree-vectorize
+# )
+# set_source_files_properties(
+# 	${SOURCE_DIR}/resid/dac.cc
+# 	${SOURCE_DIR}/resid/envelope.cc
+# 	${SOURCE_DIR}/resid/extfilt.cc
+# 	${SOURCE_DIR}/resid/filter.cc
+# 	${SOURCE_DIR}/resid/pot.cc
+# 	${SOURCE_DIR}/resid/sid.cc
+# 	${SOURCE_DIR}/resid/version.cc
+# 	${SOURCE_DIR}/resid/voice.cc
+# 	${SOURCE_DIR}/resid/wave.cc
+# 	TARGET_DIRECTORY CaptVolt
+# 	PROPERTIES COMPILE_OPTIONS "${RESID_SAFE_FLAGS}"
+# )
 
 target_compile_definitions(CaptVolt PRIVATE VERSION="3.4")
 
