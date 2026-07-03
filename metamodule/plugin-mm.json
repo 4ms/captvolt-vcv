@@ -1,0 +1,14 @@
+{
+    "MetaModuleBrandName": "CaptVolt",
+    "MetaModuleBrandSlug": "captvolt",
+    "MetaModulePluginMaintainer": "4ms Company",
+    "MetaModulePluginMaintainerEmail": "4ms@4mscompany.com",
+    "MetaModulePluginMaintainerUrl": "https://metamodule.info",
+    "MetaModuleDescription": "CaptVolt sidofon module ported from VCV",
+    "MetaModuleIncludedModules": [
+        {
+          "slug": "captvolt-sidofon",
+          "name": "sidofon"
+        }
+    ]
+}
