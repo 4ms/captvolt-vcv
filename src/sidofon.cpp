@@ -138,6 +138,10 @@ struct Sidofon : Module {
     VoiceRegs voiceRegs[VoiceRegs::NUM_VOICES];
     FilterRegs filterRegs;
 
+    // Debounced state for each on/off switch to fix chatter on MetaModule
+	// when mapping to knobs (can lock-up voices)
+    bool switchState[NUM_PARAMS] = {};
+
     // clock in
     dsp::SchmittTrigger clkInDetector;
     // clock out
@@ -335,7 +339,15 @@ struct Sidofon : Module {
         if(inputs[inputId].isConnected()) {
             val += inputs[inputId].getVoltage();
         }
-        return val >= 1.0f;
+
+        bool state = switchState[paramId];
+        if(state) {
+            if(val < 0.4f) state = false;
+        } else {
+            if(val >= 0.6f) state = true;
+        }
+        switchState[paramId] = state;
+        return state;
     }
 
     uint8_t getByteValue(int inputId, int paramId, int max)
