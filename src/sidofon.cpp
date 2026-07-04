@@ -269,6 +269,11 @@ struct Sidofon : Module {
 
     void setSampleMode(SampleMode sm)
     {
+#ifdef METAMODULE
+        // MetaModule does not support the two resampling algorithms (too cpu-heavy).
+        if(sm == SampleMode::SAMPLE_RESAMPLE || sm == SampleMode::SAMPLE_RESAMPLE_FASTMEM)
+            sm = SampleMode::SAMPLE_INTERPOLATE;
+#endif
         if(sm != sampleMode) {
             sampleMode = sm;
             requestReconfig();
@@ -322,6 +327,12 @@ struct Sidofon : Module {
         reSID::sampling_method samplingMethod{};
         switch(sampleMode) {
             case SAMPLE_DIRECT:
+#ifdef METAMODULE
+				// On MetaModule build we do not have the RESAMPLE algo, so use INTERPOLATE.
+				// Audio output is identical.
+                samplingMethod = reSID::SAMPLE_INTERPOLATE;
+                break;
+#endif
             case SAMPLE_RESAMPLE:
                 samplingMethod = reSID::SAMPLE_RESAMPLE;
                 break;
@@ -905,8 +916,11 @@ struct SidofonWidget : ModuleWidget {
 
         menu->addChild(new SampleModeMenuItem(module, "Direct", Sidofon::SAMPLE_DIRECT));
         menu->addChild(new SampleModeMenuItem(module, "Interpolate", Sidofon::SAMPLE_INTERPOLATE));
+#ifndef METAMODULE
+		// MetaModule hardware cannot support Resampling algorithms -- too CPU intensive
         menu->addChild(new SampleModeMenuItem(module, "Resample", Sidofon::SAMPLE_RESAMPLE));
         menu->addChild(new SampleModeMenuItem(module, "Resample Fastmem", Sidofon::SAMPLE_RESAMPLE_FASTMEM));
+#endif
     }
 };
 
