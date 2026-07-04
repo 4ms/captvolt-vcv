@@ -1,4 +1,5 @@
 #include <iomanip>
+#include <atomic>
 
 #include "plugin.hpp"
 #include "sid.h"
@@ -142,6 +143,8 @@ struct Sidofon : Module {
 	// when mapping to knobs (can lock-up voices)
     bool switchState[NUM_PARAMS] = {};
 
+    std::atomic<bool> reconfigPending{false};
+
     // clock in
     dsp::SchmittTrigger clkInDetector;
     // clock out
@@ -228,6 +231,11 @@ struct Sidofon : Module {
         configOutput(VOICE3_OSC, "Voice 3 Oscillator");
     }
 
+    void requestReconfig()
+    {
+        reconfigPending.store(true, std::memory_order_release);
+    }
+
     void setCPUType(CPUType type)
     {
         if(type != cpuType) {
@@ -239,7 +247,7 @@ struct Sidofon : Module {
                 cpuClockHz = cpuClockHzNTSC;
                 vsyncHz = 60.0f;
             }
-            reset();
+            requestReconfig();
         }
     }
 
@@ -247,7 +255,7 @@ struct Sidofon : Module {
     {
         if(type != sidType) {
             sidType = type;
-            reset();
+            requestReconfig();
         }
     }
 
@@ -263,7 +271,7 @@ struct Sidofon : Module {
     {
         if(sm != sampleMode) {
             sampleMode = sm;
-            reset();
+            requestReconfig();
         }
     }
 
@@ -527,6 +535,11 @@ struct Sidofon : Module {
     }
 
     void process(const ProcessArgs& args) override {
+		// Avoid race conditions by not letting the configuration change in the middle of process()
+        if(reconfigPending.exchange(false, std::memory_order_acquire)) {
+            reset();
+        }
+
         // reconfigure sid engine?
         if(sampleRate != args.sampleRate) {
             setSampleRate(args.sampleRate);
