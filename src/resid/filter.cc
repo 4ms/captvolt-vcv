@@ -178,6 +178,11 @@ static model_filter_init_t model_filter_init[2] = {
 unsigned short Filter::vcr_kVg[1 << 16];
 unsigned short Filter::vcr_n_Ids_term[1 << 16];
 
+unsigned short Filter::gain_6581[16][1 << 16];
+unsigned short Filter::summer_6581[summer_offset<5>::value];
+unsigned short Filter::mixer_6581[mixer_offset<8>::value];
+unsigned short Filter::mixer_8580[1];
+
 #if defined(__amiga__) && defined(__mc68000__)
 #undef HAS_LOG1P
 #endif
@@ -207,6 +212,17 @@ Filter::Filter()
         for (int m = 0; m < 2; m++) {
             model_filter_init_t& fi = model_filter_init[m];
             model_filter_t& mf = model_filter[m];
+
+            if (m == 0) {
+                mf.gain   = gain_6581;
+                mf.summer = summer_6581;
+                mf.mixer  = mixer_6581;
+            }
+            else {
+                mf.gain   = 0;
+                mf.summer = 0;
+                mf.mixer  = mixer_8580;
+            }
 
             // Convert op-amp voltage transfer to 16 bit values.
             double vmin = fi.opamp_voltage[0][0];
@@ -305,7 +321,8 @@ Filter::Filter()
             // From die photographs of the bandpass and volume "resistor" ladders
             // it follows that gain ~ vol/8 and 1/Q ~ ~res/8 (assuming ideal
             // op-amps and ideal "resistors").
-            for (int n8 = 0; n8 < 16; n8++) {
+            // gain is 6581-only; skip the whole fill for the 8580 (mf.gain == 0).
+            for (int n8 = 0; n8 < (m == 0 ? 16 : 0); n8++) {
                 int n = n8 << 4;  // Scaled by 2^7
                 int x = mf.ak;
                 for (int vi = 0; vi < (1 << 16); vi++) {
@@ -322,7 +339,8 @@ Filter::Filter()
             // transistors separately would be extremely costly.
             int offset = 0;
             int size;
-            for (int k = 0; k < 5; k++) {
+            // summer is 6581-only; skip the whole fill for the 8580 (mf.summer == 0).
+            for (int k = 0; k < (m == 0 ? 5 : 0); k++) {
                 int idiv = 2 + k;        // 2 - 6 input "resistors".
                 int n_idiv = idiv << 7;  // n*idiv, scaled by 2^7
                 size = idiv << 16;
@@ -340,7 +358,8 @@ Filter::Filter()
             // the filter summer.
             offset = 0;
             size = 1;  // Only one lookup element for 0 input "resistors".
-            for (int l = 0; l < 8; l++) {
+            // The 8580 needs only mixer[0] (l == 0), so stop after one pass.
+            for (int l = 0; l < (m == 0 ? 8 : 1); l++) {
                 int idiv = l;                 // 0 - 7 input "resistors".
                 int n_idiv = (idiv << 7)*8/6; // n*idiv, scaled by 2^7
                 if (idiv == 0) {

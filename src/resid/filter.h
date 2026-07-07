@@ -441,9 +441,9 @@ protected:
     // Reverse op-amp transfer function.
     unsigned short opamp_rev[1 << 16];
     // Lookup tables for gain and summer op-amps in output stage / filter.
-    unsigned short summer[summer_offset<5>::value];
-    unsigned short gain[16][1 << 16];
-    unsigned short mixer[mixer_offset<8>::value];
+    unsigned short* summer;
+    unsigned short (*gain)[1 << 16];
+    unsigned short* mixer;
     // Cutoff frequency DAC output voltage table. FC is an 11 bit register.
     unsigned short f0_dac[1 << 11];
   } model_filter_t;
@@ -454,6 +454,15 @@ protected:
   // VCR - 6581 only.
   static unsigned short vcr_kVg[1 << 16];
   static unsigned short vcr_n_Ids_term[1 << 16];
+
+  // Backing storage for the gain/summer/mixer op-amp tables, pointed at by
+  // model_filter[].gain/summer/mixer. Only the 6581 needs them,
+  // the 8580 uses pure arithmetic and reads only mixer[0].
+  static unsigned short gain_6581[16][1 << 16];
+  static unsigned short summer_6581[summer_offset<5>::value];
+  static unsigned short mixer_6581[mixer_offset<8>::value];
+  static unsigned short mixer_8580[1];  // 8580 DC offset, read as mixer[0]
+
   // Common parameters.
   static model_filter_t model_filter[2];
 
