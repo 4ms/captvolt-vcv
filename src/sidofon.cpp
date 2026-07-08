@@ -229,6 +229,11 @@ struct Sidofon : Module {
         configOutput(CLOCK_OUTPUT, "SID Register Update Clock");
         configOutput(VOICE3_ENV, "Voice 3 Envelope");
         configOutput(VOICE3_OSC, "Voice 3 Oscillator");
+
+        // Seed the debounced switch state from each param's configured default.
+        for(int i=0;i<NUM_PARAMS;i++) {
+            switchState[i] = params[i].getValue() >= 0.5f;
+        }
     }
 
     void requestReconfig()
